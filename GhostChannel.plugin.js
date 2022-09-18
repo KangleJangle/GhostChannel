@@ -9,21 +9,28 @@
  */
 
 module.exports = (_ => {
-	const changeLog = {
-		
+	const config = {
+		"info": {
+			"name": "GhostChannel",
+			"author": "KangleJangle",
+			"version": "0.0.1",
+			"description": "Displays all hidden Channels in a Discord Server."
+		}
 	};
 
+	const _showhiddenchannelsaccessmodal = "accessModal-w5HjsV";
+	const _showhiddenchannelshiddenchannel = "hidden-9f2Dsa";
+
 	return !window.BDFDB_Global || (!window.BDFDB_Global.loaded && !window.BDFDB_Global.started) ? class {
-		constructor (meta) {for (let key in meta) this[key] = meta[key];}
-		getName () {return this.name;}
-		getAuthor () {return this.author;}
-		getVersion () {return this.version;}
-		getDescription () {return `The Library Plugin needed for ${this.name} is missing. Open the Plugin Settings to download it. \n\n${this.description}`;}
+		getName () {return config.info.name;}
+		getAuthor () {return config.info.author;}
+		getVersion () {return config.info.version;}
+		getDescription () {return `The Library Plugin needed for ${config.info.name} is missing. Open the Plugin Settings to download it. \n\n${config.info.description}`;}
 		
 		downloadLibrary () {
-			require("request").get("https://github.com/KangleJangle/GhostChannel/GhostChannel.plugin.js", (e, r, b) => {
+			require("request").get("https://mwittrien.github.io/BetterDiscordAddons/Library/0BDFDB.plugin.js", (e, r, b) => {
 				if (!e && b && r.statusCode == 200) require("fs").writeFile(require("path").join(BdApi.Plugins.folder, "0BDFDB.plugin.js"), b, _ => BdApi.showToast("Finished downloading BDFDB Library", {type: "success"}));
-				else BdApi.alert("Error", "Could not download BDFDB Library Plugin. Try again later or download it manually from GitHub: https://github.com/KangleJangle/GhostChannel/blob/main/0BDFDB.plugin.js");
+				else BdApi.alert("Error", "Could not download BDFDB Library Plugin. Try again later or download it manually from GitHub: https://mwittrien.github.io/downloader/?library");
 			});
 		}
 		
@@ -31,7 +38,7 @@ module.exports = (_ => {
 			if (!window.BDFDB_Global || !Array.isArray(window.BDFDB_Global.pluginQueue)) window.BDFDB_Global = Object.assign({}, window.BDFDB_Global, {pluginQueue: []});
 			if (!window.BDFDB_Global.downloadModal) {
 				window.BDFDB_Global.downloadModal = true;
-				BdApi.showConfirmationModal("Library Missing", `The Library Plugin needed for ${this.name} is missing. Please click "Download Now" to install it.`, {
+				BdApi.showConfirmationModal("Library Missing", `The Library Plugin needed for ${config.info.name} is missing. Please click "Download Now" to install it.`, {
 					confirmText: "Download Now",
 					cancelText: "Cancel",
 					onCancel: _ => {delete window.BDFDB_Global.downloadModal;},
@@ -41,13 +48,13 @@ module.exports = (_ => {
 					}
 				});
 			}
-			if (!window.BDFDB_Global.pluginQueue.includes(this.name)) window.BDFDB_Global.pluginQueue.push(this.name);
+			if (!window.BDFDB_Global.pluginQueue.includes(config.info.name)) window.BDFDB_Global.pluginQueue.push(config.info.name);
 		}
 		start () {this.load();}
 		stop () {}
 		getSettingsPanel () {
 			let template = document.createElement("template");
-			template.innerHTML = `<div style="color: var(--header-primary); font-size: 16px; font-weight: 300; white-space: pre; line-height: 22px;">The Library Plugin needed for ${this.name} is missing.\nPlease click <a style="font-weight: 500;">Download Now</a> to install it.</div>`;
+			template.innerHTML = `<div style="color: var(--header-primary); font-size: 16px; font-weight: 300; white-space: pre; line-height: 22px;">The Library Plugin needed for ${config.info.name} is missing.\nPlease click <a style="font-weight: 500;">Download Now</a> to install it.</div>`;
 			template.content.firstElementChild.querySelector("a").addEventListener("click", this.downloadLibrary);
 			return template.content.firstElementChild;
 		}
@@ -160,7 +167,7 @@ module.exports = (_ => {
 			}
 		};
 	
-		return class ShowHiddenChannels extends Plugin {
+		return class ShowHiddenChannelsReturns extends Plugin {
 			onLoad () {
 				overrideTypes = Object.keys(BDFDB.DiscordConstants.PermissionOverrideType);
 				
@@ -188,7 +195,7 @@ module.exports = (_ => {
 			
 				this.patchedModules = {
 					before: {
-						Channels: "render",
+						ChannelList: "render",
 						ChannelCategoryItem: "type",
 						ChannelItem: "default",
 						VoiceUsers: "render"
@@ -200,7 +207,7 @@ module.exports = (_ => {
 				};
 				
 				this.css = `
-					${BDFDB.dotCNS._showhiddenchannelsaccessmodal + BDFDB.dotCN.messagespopoutemptyplaceholder} {
+					${_showhiddenchannelsaccessmodal + BDFDB.dotCN.messagespopoutemptyplaceholder} {
 						position: absolute;
 						bottom: 0;
 						width: 100%;
@@ -362,7 +369,7 @@ module.exports = (_ => {
 				if (e.instance.props.channel && this.isChannelHidden(e.instance.props.channel.id)) return null;
 			}
 			
-			processChannels (e) {
+			processChannelList (e) {
 				if (!e.instance.props.guild || e.instance.props.guild.id.length < 16) return;
 				let show = !blackList.includes(e.instance.props.guild.id), sortAtBottom = this.settings.sortOrder.hidden == sortOrders.BOTTOM.value;
 				e.instance.props.guildChannels = new e.instance.props.guildChannels.constructor(e.instance.props.guildChannels.id, e.instance.props.guildChannels.hoistedSection.hoistedRows);
@@ -411,7 +418,7 @@ module.exports = (_ => {
 			
 			processChannelItem (e) {
 				if (e.instance.props.channel && this.isChannelHidden(e.instance.props.channel.id)) {
-					if (!e.returnvalue) e.instance.props.className = BDFDB.DOMUtils.formatClassName(e.instance.props.className, BDFDB.disCN._showhiddenchannelshiddenchannel);
+					if (!e.returnvalue) e.instance.props.className = BDFDB.DOMUtils.formatClassName(e.instance.props.className, _showhiddenchannelshiddenchannel);
 					else {
 						let [children, index] = BDFDB.ReactUtils.findParent(e.returnvalue, {name: "ChannelItemIcon"});
 						let channelChildren = BDFDB.ReactUtils.findChild(e.returnvalue, {props: [["className", BDFDB.disCN.channelchildren]]});
@@ -564,7 +571,7 @@ module.exports = (_ => {
 					size: "MEDIUM",
 					header: BDFDB.LanguageUtils.LanguageStrings.CHANNEL + " " + BDFDB.LanguageUtils.LanguageStrings.ACCESSIBILITY,
 					subHeader: "#" + channel.name,
-					className: BDFDB.disCN._showhiddenchannelsaccessmodal,
+					className: _showhiddenchannelsaccessmodal,
 					contentClassName: BDFDB.DOMUtils.formatClassName(!isThread && BDFDB.disCN.listscroller),
 					onOpen: modalInstance => {if (modalInstance) accessModal = modalInstance;},
 					children: isThread ? infoStrings : [
@@ -888,5 +895,5 @@ module.exports = (_ => {
 				}
 			}
 		};
-	})(window.BDFDB_Global.PluginUtils.buildPlugin(changeLog));
+	})(window.BDFDB_Global.PluginUtils.buildPlugin(config));
 })();
